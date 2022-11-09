@@ -44,6 +44,17 @@ if ( abs((1 / 12) - (x1 - x2)) < exp(-30)) {
 }
 ```
 
+or directly using all.equal()
+```{r}
+x1 <- 1/3 ; x2 <- 1/4
+if (all.equal(1 / 12, x1 - x2) ) {
+  print("Subtraction is correct")
+} else {
+  print("Subtraction is wrong")
+}
+```
+
+
 ## Question 2
 
 1. Write your own R function to calculate the derivative of $f(x) = x$ in this way with $ε = 10^{-15}$
@@ -56,9 +67,18 @@ Q2_derivative <- function(x){
   return(fp)
 }
 
+```
+
+2. Evaluate your derivative function at x = 1 and x = 100000.
+```{r}
 Q2_derivative(1)
 Q2_derivative(100000)
 ```
+
+3. What values did you obtain? What are the true values? Explain the reasons behind the
+discovered differences.
+- True value should be exactly 1. While what we got is 1.110223 at x = 1 and 0 at x = 100000.  
+ε + x - x makes floating-point number rounded. And due to 100000 occupies too much mantissa, the result was rounded to 0.
 
 
 ## Question 3
