@@ -1,0 +1,91 @@
+---
+title: "lab01"
+output: html_document
+date: "2022-11-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+1. Check the results of the snippets. Comment what is going on.
+
+```{r Q1, echo=TRUE}
+x1 <- 1/3 ; x2 <- 1/4
+if ( x1 - x2 == 1/12) {
+  print("Subtraction is correct")
+} else {
+  print("Subtraction is wrong")
+}
+
+# and
+
+x1 <- 1 ; x2 <- 1/2
+if ( x1 - x2 == 1/2) {
+  print("Subtraction is correct")
+} else {
+  print("Subtraction is wrong")
+}
+```
+
+- 1/3 and 1/12 are infinite decimals, while 1/2 is not.  
+Computation of floating-point numbers makes the result different.
+
+2. If there are any problems, suggest improvements.
+- give a tolerance |a - b| < ε， while ε is close to 0
+```{r}
+x1 <- 1/3 ; x2 <- 1/4
+if ( abs((1 / 12) - (x1 - x2)) < exp(-30)) {
+  print("Subtraction is correct")
+} else {
+  print("Subtraction is wrong")
+}
+```
+
+## Question 2
+
+1. Write your own R function to calculate the derivative of $f(x) = x$ in this way with $ε = 10^{-15}$
+```{r}
+Q2_derivative <- function(x){
+  
+  e <- 10^-15
+  fp <-  ((x + e) - x) / e
+  
+  return(fp)
+}
+
+Q2_derivative(1)
+Q2_derivative(100000)
+```
+
+
+## Question 3
+
+```{r}
+# 1
+myvar <- function(x){
+  n <- length(x)
+  s2 <- (sum(x^2) - (sum(x))^2 / n) / (n - 1)
+  
+  return(s2)
+}
+
+# 2
+x <- rnorm(10000, mean = 10^8, sd = 1)
+
+myvar(x)
+
+# 3
+Y <- numeric(length = 10000)
+for (i in 1:10000) {
+  Y[i] <- myvar(x[1:i] - var(x[1:i]))
+}
+
+plot(1:10000, Y)
+plot(1:10000, Y, xlim = c(1,50))
+```
+
+
+
