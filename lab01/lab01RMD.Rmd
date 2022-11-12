@@ -101,8 +101,8 @@ variance 1.
 x <- rnorm(10000, mean = 10^8, sd = 1)
 ```
 
-3. For each subset $X_i = \{x_1,..., x_i, i = 1,...,10000$ compute the difference $Y_i = myvar(X_i)− var(X_i)$, where $var(X_i)$ is the standard variance estimation function in R. Plot the dependence $Y_i$ on $i$. Draw conclusions from this plot. How well does your function work? Can
-you explain the behaviour?
+3. For each subset $X_i = \{x_1,..., x_i, i = 1,...,10000$ compute the difference $Y_i = myvar(X_i)− var(X_i)$, where $var(X_i)$ is the standard variance estimation function in R. Plot the dependence $Y_i$ on $i$. Draw conclusions from this plot. How well does your function work? Can you explain the behaviour?
+- Three branches can be seen in the plot: one tends to 0, one tends to -2, and one is concentrated around -1.If the result is correct,all of the result will be equal to 0,so the function doesn't work well.If we look at the calculation results of the myvar function, we will find that many of them are 0. Therefore, the reason may be that two large numbers occupy too many mantissas, so the numbers with smaller digits are rounded, resulting in the subtraction of two large numbers The result is 0.
 
 ```{r Q3.3}
 Y <- numeric(length = 10000)
@@ -111,8 +111,33 @@ for (i in 1:10000) {
 }
 
 plot(1:10000, Y)
-plot(1:10000, Y, xlim = c(1,50))
 ```
+
+4. How can you better implement a variance estimator? Find and implement a formula that will give the same results as var()?
+We could implement this formula to calculate the variance:$$Var = \frac{1}{n-1}\sum_{i=1}^n(X_i - \bar{X})^2$$
+
+```{r Q3.4}
+myvar_new=function(x){
+  x_mean=sum(x)/(length(x))
+  sum_x=sum((x-x_mean)^2)
+  return(sum_x/(length(x)-1))
+}
+myvar_new(x)
+```
+
+
+## Question 4
+
+1.
+
+
+
+
+
+
+
+
+
 
 
 
