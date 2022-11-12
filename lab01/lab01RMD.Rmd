@@ -128,16 +128,60 @@ myvar_new(x)
 
 ## Question 4
 
-1.
+1. Even if overﬂow and underﬂow would not occur these expressions will not work correctly for all values of n and k. Explain what is the problem in A, B and C respectively.
 
+```{r Q4.1}
+function_a=function(n,k){
+  return(prod(1:n)/(prod(1:k)*prod(1:(n-k))))
+}
 
+function_b=function(n,k){
+  return(prod((k+1):n)/prod(1:(n-k)))
+}
 
+function_c=function(n,k){
+  return(prod(((k+1):n)/(1:(n-k))))
+}
+```
 
+- In function A,when k=0,it will return Inf,instead of 1.In function A,B,and C,when n=k,they will return Inf,instead of 1.
 
+2.In mathematical formulae one should suspect overﬂow to occur when parameters, here n and k, are large. Experiment numerically with the code of A, B and C, for diﬀerent values of n and k to see whether overﬂow occurs. Graphically present the results of your experiments.
 
+```{r Q4.2}
+library(ggplot2)
+library(dplyr)
 
+record=data.frame()
 
+for(n in seq(10,1200,10)){
+  k=floor(n/3)
+  a=log(function_a(n,k))
+  b=log(function_b(n,k))
+  c=log(function_c(n,k))
+  #Let's use log to convert the values of a, b and c to linear,so that we can make a more intuitive plot
+  record=rbind(record,c(n,k,a,b,c))
+}
+colnames(record)=c("n","k","a","b","c")
+record_plot=data.frame()
+record_a=record%>%filter(!is.na(record$a))%>%select(n,k,"values"=a)%>%mutate(Class="A")
+record_b=record%>%filter(!is.na(record$b))%>%select(n,k,"values"=b)%>%mutate(Class="B")
+record_c=record%>%filter(!is.na(record$c))%>%select(n,k,"values"=c)%>%mutate(Class="C")
 
+record_plot=rbind(record_c,record_b,record_a)
+
+ggplot(data=record_plot,aes(x=n,y=values,color=Class))+geom_point()+
+  labs(x="N(K=N/3)",y='Value',
+       title="The Values of different function A,B,C",
+       subtitle = "With different N & K",
+       tag = "Fig. 1")+
+  theme_set(theme_bw())
+```
+
+- We notice that when N is around 170,the overflow problem occur in function A,when N is around 220,the overflow problem occur in function B,and when N is around 1130,the overflow problem occur in function C.Among them, k is equal to the result of dividing n by 3 and rounding up.
+
+3.Which of the three expressions have the overﬂow problem? Explain why.
+-The formula A occur the overflow first(Inf when n is larger than 170 and NaN when n is larger than 200),it's because prod(1:n) is much larger than denominator.Then formula B occur the overflow second(Inf when n is larger than 220 and Nan when n is larger than 260).The formula C can calculate much large number than formula A and B.Because this formula ensures that the gap between the numerator and the denominator of each item of the multiplication will not be as large as formula A and formula B
 
 
 
