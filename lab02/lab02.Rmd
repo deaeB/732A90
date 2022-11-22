@@ -1,0 +1,84 @@
+---
+title: "Computer Lab 2"
+author: "Group 30"
+output: html_document
+date: "2022-11-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library, include=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+
+## Question 2: Maximizing likelihood
+
+The file data.RData contains a sample from normal distribution with some parameters µ, σ. For
+this question read ?optim in detail.  
+
+1. Load the data to R environment.
+```{r 2.1}
+load("data.RData")
+```
+
+2. Write down the log-likelihood function for 100 observations and derive maximum likelihood
+estimators for $\mu$, $\sigma$ analytically by setting partial derivatives to zero. Use the derived
+formulae to obtain parameter estimates for the loaded data.
+
+- For sample "data" from normal distribution:
+$$f(x; \sigma, \mu) = \frac{1}{\sqrt {2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+then the likelihood function:
+$$L(x_1, x_2,…,x_n;\sigma, \mu) = 
+\prod^{n}_{i = 1} \frac{1}{\sqrt {2\pi}\sigma}e^{-\frac{(x_i-\mu)^2}{2\sigma^2}}$$
+take the logarithm:
+$$\begin{aligned}
+ ln(L(x_1, x_2,…,x_n;\sigma, \mu)) 
+  &= ln(\prod^{n}_{i = 1} \frac{1}{\sqrt {2\pi}\sigma} e^{-\frac{(x_i-\mu)^2}{2\sigma^2}}) \\ 
+  &= ln( (\frac{1}{\sqrt {2\pi}\sigma})^n e^{-\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{2\sigma^2}}) \\
+  &= nln( \frac{1}{\sqrt {2\pi}\sigma}) -{\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{2\sigma^2}} \\
+  &= nln( \frac{1}{\sqrt {2\pi}}) - nln( \sigma)  -{\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{2\sigma^2}} \\
+\end{aligned}$$
+partial derivative:
+$$\begin{aligned}
+\frac{\partial ln(L(x_1, x_2,…,x_n;\sigma, \mu))}{\partial \mu} 
+  &= {\frac{2\sum^{n}_{i = 1} (x_i-\mu)}{2\sigma^2}} \\
+  &= {\frac{\sum^{n}_{i = 1} (x_i-\mu)}{\sigma^2}}
+\end{aligned}$$
+$$\begin{aligned}
+\frac{\partial ln(L(x_1, x_2,…,x_n;\sigma, \mu))}{\partial \sigma} 
+  &= -\frac{n}{\sigma} + {\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{\sigma^3}}
+\end{aligned}$$
+when equal to zero:
+$$\begin{aligned}
+\frac{\partial ln(L(x_1, x_2,…,x_n;\sigma, \mu))}{\partial \mu} 
+  = {\frac{\sum^{n}_{i = 1} (x_i-\mu)}{\sigma^2}}
+  &= 0 \\
+  \sum^{n}_{i = 1} (x_i-\hat\mu) &= 0 \\
+  \sum^{n}_{i = 1} x_i &= n\hat\mu \\
+  \hat \mu &= \frac{\sum^{n}_{i = 1} x_i}{n} = \bar X
+\end{aligned}$$
+$$\begin{aligned}
+\frac{\partial ln(L(x_1, x_2,…,x_n;\sigma, \mu))}{\partial \sigma} 
+  = -\frac{n}{\sigma} + {\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{\sigma^3}}
+  &= 0 \\
+  {\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{\sigma^3}} &=  \frac{n}{\sigma} \\
+  {\frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{n}} &=  \hat \sigma^2 \\
+\end{aligned}$$
+so the estimator we will use would be $\hat \sigma^2 = \frac{\sum^{n}_{i = 1} (x_i-\mu)^2}{n}$ 
+and $\hat \mu = \bar X$
+```{r 2.2}
+mu=mean(data)
+sigma=sqrt(sum((data-mu)^2)/length(data))
+# value:
+mu
+sigma
+```
+
+3. Optimize the minus log{likelihood function with initial parameters µ = 0, σ = 1. Try both
+Conjugate Gradient method (described in the presentation handout) and BFGS (discussed
+in the lecture) algorithm with gradient specified and without. Why it is a bad idea to
+maximize likelihood rather than maximizing log{likelihood?
