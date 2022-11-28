@@ -1,0 +1,39 @@
+---
+title: "Computer Lab 3"
+author:
+- Shipeng Liu (shili506)
+- Dongwei Ni (donni508)
+
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+```
+
+## Question 1: Stable distribution
+
+Q1: 
+```{r 1.1}
+fx <- function(x, c){
+  f <- c * (sqrt(2*pi)^-1) * exp(1)^(-c^2 / (2*x)) * x^(-3 / 2)
+  return(f)
+}
+
+fpx <- function(x, Tmin, alpha){
+  fp <- ((alpha - 1) / Tmin) * (x / Tmin)^(-alpha) 
+  return(fp)
+}
+```
+
+```{r}
+fx1 <- \(x) fx(x, 1)
+fpx1 <- \(x) fpx(x, 1, 2)
+
+curve(fx1, xlim = c(0,10), ylim = c(0,3), xlab = "x", ylab = "y")
+curve(fpx1, add = TRUE, col = "red")
+text(x = 5, y  = c(0.6, 1), labels = c("f(x), c=1", "fp(x), Tmin=1, alpha=2"), col = c("black", "red"))
+
+```
