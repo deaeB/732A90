@@ -4,8 +4,8 @@ author:
 - Shipeng Liu (shili506)
 - Dongwei Ni (donni508)
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 
@@ -27,109 +27,188 @@ library(poweRlaw)
 
 ### Plot $f(x)$ and $fp(x)$ together
 
-```{r 1.1, warning=FALSE}
-x=seq(0,10,0.05)
-
-#one–sided strictly stable distribution of order 1/2 where c=2
-f=function(x){
-  c=2
-  sapply(x,function(y){
-    if(y>0){
-      return(c*sqrt(2*pi)^(-1)*exp(-(c^2)/(2*y))*(y^(-3/2)))
-    }else{
-      return(0)
-    }
-  })
+```{r 1.1 fun}
+fx <- function(x, c){
+  if (x > 0) {
+    f <- c * (sqrt(2*pi)^-1) * exp(1)^(-c^2 / (2*x)) * x^(-3 / 2)
+  } else {
+    f <- 0
+  }
+  return(f)
 }
 
-y_f=f(x)
-
-#power–law distribution where a=1.5 and t_min=4/3
-fp=function(x){
-  a=1.5;t_min=4/3
-  sapply(x,function(y){
-    if(y>t_min){
-      return(((a-1)/t_min)*(y/t_min)^(-a))
-    }else{
-      return(0)
-    }
-  })
+fpx <- function(x, Tmin, alpha){
+  if (x > Tmin) {
+    fp <- ((alpha - 1) / Tmin) * (x / Tmin)^(-alpha) 
+  } else {
+    fp <- 0
+  }
+  return(fp)
 }
-y_fp=fp(x)
-
-df=rbind(data.frame("x"=x,"y"=y_f,"class"="f"),data.frame("x"=x,"y"=y_fp,"class"="fp"))
-
-
-
-p1=ggplot(data=df,aes(x=x,y=y))+geom_point(aes(color=class))+
-  labs(tag="Fig. 1")+
-  scale_color_discrete(
-    name="distribution",
-    labels=c("one–sided strictly stable distribution","power–law distribution")
-  )
-p1
 ```
+
+```{r 1.1 plot}
+
+fx_c <- 1
+fpx_Tmin <- 1
+fpx_alpha <- 1.5
+
+fx1 <- \(x) sapply(x, fx, c = fx_c)
+# f(x) in a sapply form
+fpx1 <- \(x) sapply(x, fpx, Tmin = fpx_Tmin, alpha = fpx_alpha)
+# fp(x) in a sapply form
+curve(fx1, xlim = c(0,10), ylim = c(0,3), xlab = "x", ylab = "y")
+curve(fpx1, from = 0, to = fpx_Tmin , add = TRUE, col = "red")
+curve(fpx1, from = fpx_Tmin+ exp(-15) ,  add = TRUE, col = "red")
+text(x = 5, y  = c(0.6, 1), 
+     # labels = c("f(x), c=1", "fp(x), Tmin=1, alpha=2"),
+     labels = c(paste0("f(x), c=", fx_c), paste0("fp(x), Tmin=",fpx_Tmin, " alpha=", fpx_alpha)),
+     col = c("black", "red")
+     )
+
+```
+
+### Can the power_law distribution be used just by itself or is there a problem at any place of the support Explain what the problem is and how can it be taken care of. Provide values of the power-law distribution’s parameters that can be used in the acceptance-rejection algorithm. Derive and implement a majorizing density.
 
 The power–law distribution can not be used just by itself,because the two distribution don't have the same support.
 In $(0,t_{min})$,the density of the power–law distribution is 0,but for one–sided strictly stable distribution of order 1/2 it isn't.The power–law distribution can't generate the proper samples in accept-reject method in this interval.
-We can apply a uniform distribution on the interval $(0,t_{min})$ as a majorizing function
+We can apply a uniform distribution at least on the interval $(0,t_{min})$ as a majorizing function.  
 
-For optimal Tmin:
+
+if we want $\forall_x nf_p(x) \geq f(x)$, then it has to be $$\displaystyle \lim_{x \to \infty} \frac{nf_p(x)}{f(x)} \geq 1$$
+to guarantee this requirement ,we can make that
+$$
+\begin{aligned}
+\displaystyle \lim_{x \to \infty} \frac{x^{-\alpha}}{x^{-3/2}} &= +\infty \\
+\alpha &< \frac32
+\end{aligned}
+$$
+given that we choose  $ \alpha = 1.2$ 
 take the derivative of target density function
 $$\frac{df(x)}{dx} = (\sqrt{2\pi}^{-1}  e^{-\frac{c^2}{2x}}  (\frac{c^2}{2x}x^{-3/2} - \frac{3}{2} x^{-5/2}))$$
-take the root, we got
-$$maxf(x) = f(\frac{1}{3}c^2)$$
-so the optimal $T_{min} = \frac{1}{3}c^2$  
+solve$$
+\begin{aligned}
+\frac{df(x)}{dx} &= 0 \\
+x &= \frac{1}{3}c^2 
+\end{aligned}$$
+now we know that $maxf(x) = f(\frac{1}{3}c^2)$
+arbitrarily we choose $n = 2c$ 
+then we let $$\begin{aligned}
+\displaystyle \lim_{x \to T_{min}} nf_p(x) = n\frac{\alpha - 1}{T_{min}} &= f(\frac{1}{3}c^2) \\
+ T_{min} &=  n\frac{\alpha - 1}{f(\frac{1}{3}c^2)} 
+\end{aligned}$$
 
-For optimal $\alpha$:
-we need to make sure $\forall_x af_p(x) \geq f(x)$ (a is a constant)
-hence we should take an appropriate value of a  
-s.t. the difference between $f(x)$ and $f_p(x)$ will not be large in the interval$(T_{min} , \infty)$
-according to the plot, we set $\alpha = 1.5$
+
+```{r 1.1 plot2}
+
+fx_c <- 1
+fpx_n <- 2*fx_c
+fpx_alpha <- 1.2
+fx1 <- \(x) sapply(x, fx, c = fx_c)
+# f(x) in a sapply form
+fx1_max <- fx1(fx_c^2/3)
+
+fpx_Tmin <- fpx_n*(fpx_alpha - 1) / fx1_max
+
+fpxn <- function(x, Tmin, alpha, n){
+  if (x > Tmin) {
+    fp <- n *((alpha - 1) / Tmin) * (x / Tmin)^(-alpha) 
+    #n * fpx
+  } else {
+    fp <- 0
+  }
+  return(fp)
+}
+fpx2 <- \(x) sapply(x, fpxn, Tmin = fpx_Tmin, alpha = fpx_alpha, n = fpx_n)
+# n*fp(x) in a sapply form
+
+curve(fx1, xlim = c(0,10), ylim = c(0,3), xlab = "x", ylab = "y")
+curve(fx1_max*x^0, from = 0, to = fpx_Tmin , add = TRUE, col = "blue")
+curve(fpx2, from = fpx_Tmin+ exp(-15) ,  add = TRUE, col = "red")
+text(x = 5, y  = c(0.6, 1, 1.4), 
+     # labels = c("f(x), c=1", "fp(x), Tmin=1, alpha=2"),
+     labels = c(paste0("f(x), c=", fx_c),
+                paste0("fu(x) = maxf(x) = ", round(fx1_max, 2),", x is in [0, Tmin]" ),
+                paste0("n*fp(x)", ", n=", fpx_n, ", Tmin=", round(fpx_Tmin,2), ", alpha=", fpx_alpha)),
+     col = c("black", "blue", "red")
+     )
+
+```
+
 
 
 ## Task 2
 
 ### Implement an acceptance-rejection algorithm for sampling from the one-sided strictly stable distribution of order 1/2 with the proposal distribution built around the power-law distribution.
 
-```{r 1.2, warning=FALSE}
-sampling=function(samp_x,constant,c,t_min,alpha){
-  a=sapply(samp_x,function(samp_x){
-    x=NA
-    while(is.na(x)){
-      u=runif(1)
-      if(samp_x>=0 && samp_x<=t_min+0.5){
-        y=runif(1)
-        if(u<=f(y)/constant*dunif(y)){x<-y}
-      }else{
-        y=rplcon(1,t_min,alpha)
-        if(u<=f(y)/constant*dplcon(y,t_min,alpha)){x<-y}
-      }
+```{r 1.2 intergrate}
+int1 <- fx1_max * fpx_Tmin
+int1
+int2 <- integrate(fpx2, fpx_Tmin, Inf)
+int2$value
+```
+we have $\int_0^{T_{min}}{f_{unif}(x)} : \int_{T_{min}}^{+\infty}f_p(x) = 1 : 5$
+
+```{r}
+rmajor <- function(n){
+  res <- c()
+  for (i in 1:n) {
+    div <- sample(c(1,2), 1, prob = c(int1, int2$value))
+    if (div == 1) {
+      res[i] <- runif(1,0, fpx_Tmin)
+    } else {
+      res[i] <- rplcon(1,fpx_Tmin, fpx_alpha)
     }
-    return(x)
-  })
-  return(a)
+  }
+  return(res)
 }
 
-t_min=4/3
-alpha=1.5
-c=2
-constant=1
+fmajor <- function(x){
+  if (x <= 0) return(0)
+  sapply(x, function(x, Tmin){
+    if (x > Tmin) {
+      y <- fpx2(x)
+    }else {
+      y <- fx1_max
+    }
+    return(y)
+  },
+  Tmin = fpx_Tmin
+    )
+}
 
-samp_x=runif(2000,0,10)
-samp=sampling(samp_x,constant,c,t_min,alpha)
-p2=ggplot(data.frame("x"=samp),aes(x=x))+geom_density()+xlim(c(0,10))+
-  labs(title="The sampler density",tag="Fig. 2")
-df_f=df%>%filter(class=="f")
-p3=ggplot(data=df_f,aes(x=x,y=y))+geom_line()+
-  labs(title="The target density",tag="Fig. 3")
-plot_comb=grid.arrange(p2,p3)
-plot_comb
+generate <- function(n){
+    x <- c()
+  for (i in 1:n) {
+    x[i] <- NA
+    while (is.na(x[i])) {
+      y <- rmajor(1)
+      u <- runif(1,0, fpx_Tmin)
+      valid <- u <= (fx1(y) / fmajor(y))
+      if (valid) {
+        x[i] <- y
+      }
+    }
+  }
+  return(x)
+}
 ```
 
-
 ## Task 3
+make a sample which n == 10000
 
+for c = 1:
+```{r 1.3 c1}
+rnumber <- generate(10000)
+
+hist_rnum <- hist(rnumber[rnumber<10],breaks = 1000,plot = FALSE)
+hist_scale <- hist_rnum$counts * (fx1_max / max(hist_rnum$counts))
+
+curve(fx1, xlim = c(0,10), ylim = c(0,1), xlab = "x", ylab = "y")
+curve(fx1_max*x^0, from = 0, to = fpx_Tmin , add = TRUE, col = "blue")
+curve(fpx2, from = fpx_Tmin+ exp(-15) ,  add = TRUE, col = "red")
+# barplot(hist_scale, width = 10 / 1000, add = TRUE, space = 0)
+```
 
 
 # Question 2: Laplace distribution
