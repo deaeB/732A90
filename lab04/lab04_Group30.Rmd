@@ -280,6 +280,131 @@ From the first sampling to the last time, $\mu_n$ always oscillates in a range, 
 
 
 
+## Appendix
+
+Contribution Statement:  
+Shipeng Liu: 1.4-2.5  
+Dongwei Ni: 1.1-1.3
+
+```{r codes, eval=FALSE, include=TRUE}
+library(tidyverse)
+library(ggplot2)
+library(coda)
+mcq1 <- function(X0_ele, n, sdlog_in){
+  
+  X0 <- rep(X0_ele, n)
+  pdf_pi <- \(x) if (x > 0) {
+    (x^5 * exp(-x) / 120)
+    } else {NA}
+  
+  for (i in 1:(n-1)) {
+    X <- X0[i]
+    Y <- rlnorm(1, meanlog = log(X), sdlog = sdlog_in)
+    U <- runif(1)
+    alpha <- min(1, pdf_pi(Y)*dlnorm(X, meanlog = log(Y), sdlog = sdlog_in) /
+                   (pdf_pi(X)*dlnorm(Y, meanlog = log(X), sdlog = sdlog_in)))
+    if (U < alpha) {
+      X0[i+1] <- Y
+    } else{
+      X0[i+1] <- X0[i]
+    }
+  }
+  return(X0)
+}
+
+X1 <- mcq1(30, 8000, 0.5)
+plot(1:length(X1), X1, type = "l", xlab = "t", ylab = "X(t)")
+abline(h = 12)
+
+mcq2 <- function(X0_ele, n){
+  
+  X0 <- rep(X0_ele, n)
+  pdf_pi <- \(x) if (x > 0) {
+    (x^5 * exp(-x) / 120)
+    } else {NA}
+  
+  for (i in 1:(n-1)) {
+    X <- X0[i]
+    Y <- rchisq(1, df = (X) )
+    U <- runif(1)
+    alpha <- min(1, pdf_pi(Y)*dchisq(X, df = floor(Y+1)) /
+                   (pdf_pi(X)*dchisq(Y, df =floor(X+1))))
+    if (U < alpha) {
+      X0[i+1] <- Y
+    } else{
+      X0[i+1] <- X0[i]
+    }
+  }
+  return(X0)
+}
+
+X2 <- mcq2(30, 8000 )
+plot(1:length(X2), X2, type = "l", xlab = "t", ylab = "X(t)")
+abline(h = 12)
+
+f1=mcmc.list()
+
+for(i in 1:10){
+  f1[[i]]=as.mcmc(mcq2(i, 8000 ))
+}
+print(gelman.diag(f1))
+
+mean(X1)
+mean(X2)
+
+load("chemical.RData")
+chemical=data.frame("X"=X,"Y"=Y)
+ggplot(data=chemical,aes(x=X,y=Y))+geom_point()
+
+Gibbs=function(data,t_max){
+  n=nrow(data)  #
+  record=matrix(0,nrow=t_max,ncol = n)
+  t=1
+  while(t<=t_max){
+    for(i in 1:n){
+      if(i==1){
+        record[t,i]=rnorm(1,(record[t,2]+data[1,2])/2,sqrt(0.2/2))
+      }else if(i>1 && i<n){
+        record[t,i]=rnorm(1,(record[t,i-1]+
+                               record[t,i+1]+data[i,2])/3,sqrt(0.2/3))
+      }else if(i==n){
+        record[t,i]=rnorm(1,(record[t,n-1]+data[n,2])/2,sqrt(0.2/2))
+      }
+    }
+    if(t<t_max){
+      record[t+1,]=record[t,]
+    }
+    t=t+1
+  }
+  return(record)
+}
+
+samp=Gibbs(chemical,1000)
+
+expect_mu=colMeans(samp)
+expect_mu
+
+chemical=chemical%>%mutate(mu=expect_mu)%>%group_by(X)%>%
+  pivot_longer(Y:mu,names_to="slmp",values_to="ss")
+ggplot(data=chemical,aes(x=X,y=ss))+geom_point(aes(color=slmp))+
+  labs(x = "X", y = "Value",
+       color = "Value") +
+  scale_color_discrete(
+    name = "Values:", 
+    labels = c("Expected µ", "Y")
+  )
+
+samp_df=data.frame(samp)%>%mutate(sample=1:1000)
+ggplot(samp_df,aes(x=sample,y=X50))+geom_line()
+```
+
+
+
+
+
+
+
+
 
 
 

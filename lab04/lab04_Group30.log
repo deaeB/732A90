@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.10) (preloaded format=pdflatex 2022.11.9)  6 DEC 2022 21:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.10) (preloaded format=pdflatex 2022.11.9)  6 DEC 2022 22:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -588,46 +588,58 @@ LaTeX Warning: Command \textperiodcentered invalid in math mode on input line 3
 File: lab04_Group30_files/figure-latex/2.4.3-1.pdf Graphic file (type pdf)
 <use lab04_Group30_files/figure-latex/2.4.3-1.pdf>
 Package pdftex.def Info: lab04_Group30_files/figure-latex/2.4.3-1.pdf  used on 
-input line 425.
+input line 426.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 [7]
 <lab04_Group30_files/figure-latex/2.5.1-1.pdf, id=103, 469.755pt x 325.215pt>
 File: lab04_Group30_files/figure-latex/2.5.1-1.pdf Graphic file (type pdf)
 <use lab04_Group30_files/figure-latex/2.5.1-1.pdf>
 Package pdftex.def Info: lab04_Group30_files/figure-latex/2.5.1-1.pdf  used on 
-input line 433.
+input line 434.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[8 <./lab04_Group30_files/figure-latex/2.4.3-1.pdf>] [9 <./lab04_Group30_files/
-figure-latex/2.5.1-1.pdf>] (lab04_Group30.aux) ) 
+[8 <./lab04_Group30_files/figure-latex/2.4.3-1.pdf>]
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+559.
+(D:\Program\LaTeX\MiKTeX\tex/latex/lm\ts1lmtt.fd
+File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+) [9 <./lab04_Group30_files/figure-latex/2.5.1-1.pdf>]
+Underfull \vbox (badness 10000) detected at line 565
+ []
+
+
+Underfull \vbox (badness 10000) detected at line 565
+ []
+
+[10] [11] (lab04_Group30.aux) ) 
 Here is how much of TeX's memory you used:
- 13910 strings out of 475380
- 221225 string characters out of 2786630
- 613321 words of memory out of 3000000
- 34958 multiletter control sequences out of 15000+600000
- 518846 words of font info for 102 fonts, out of 8000000 for 9000
+ 13954 strings out of 475380
+ 221909 string characters out of 2786630
+ 613355 words of memory out of 3000000
+ 34994 multiletter control sequences out of 15000+600000
+ 519151 words of font info for 103 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  74i,11n,81p,1012b,486s stack positions out of 10000i,1000n,20000p,200000b,80000s
-{D:/Program/LaTeX/MiKTeX/fonts/
-enc/dvips/lm/lm-ts1.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{
-D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{D:/Program/LaTeX/MiKT
-eX/fonts/enc/dvips/lm/lm-mathit.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm
-/lm-rm.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}<D:/Progra
-m/LaTeX/MiKTeX/fonts/type1/public/lm/lmbx10.pfb><D:/Program/LaTeX/MiKTeX/fonts/
-type1/public/lm/lmbx12.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmex1
-0.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmmi10.pfb><D:/Program/LaT
-eX/MiKTeX/fonts/type1/public/lm/lmmi5.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/
-public/lm/lmmi7.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmr10.pfb><D
-:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmr12.pfb><D:/Program/LaTeX/MiKTeX
-/fonts/type1/public/lm/lmr17.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm
-/lmr5.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmr7.pfb><D:/Program/L
-aTeX/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><D:/Program/LaTeX/MiKTeX/fonts/typ
-e1/public/lm/lmsy5.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmsy7.pfb
-><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><D:/Program/LaTeX/Mi
-KTeX/fonts/type1/public/lm/lmtt10.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/publ
-ic/lm/lmtti10.pfb>
-Output written on lab04_Group30.pdf (9 pages, 424585 bytes).
+{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-t
+s1.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{D:/Program/LaTeX/
+MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvip
+s/lm/lm-mathit.enc}{D:/Program/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}{D:/Pr
+ogram/LaTeX/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}<D:/Program/LaTeX/MiKTeX/fo
+nts/type1/public/lm/lmbx10.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/l
+mbx12.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmex10.pfb><D:/Program
+/LaTeX/MiKTeX/fonts/type1/public/lm/lmmi10.pfb><D:/Program/LaTeX/MiKTeX/fonts/t
+ype1/public/lm/lmmi5.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmmi7.p
+fb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmr10.pfb><D:/Program/LaTeX/M
+iKTeX/fonts/type1/public/lm/lmr12.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/publ
+ic/lm/lmr17.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmr5.pfb><D:/Pro
+gram/LaTeX/MiKTeX/fonts/type1/public/lm/lmr7.pfb><D:/Program/LaTeX/MiKTeX/fonts
+/type1/public/lm/lmsy10.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmsy
+5.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><D:/Program/LaTe
+X/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/
+public/lm/lmtt10.pfb><D:/Program/LaTeX/MiKTeX/fonts/type1/public/lm/lmtti10.pfb
+>
+Output written on lab04_Group30.pdf (11 pages, 432183 bytes).
 PDF statistics:
- 257 PDF objects out of 1000 (max. 8388607)
- 44 named destinations out of 1000 (max. 500000)
- 30842 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 273 PDF objects out of 1000 (max. 8388607)
+ 48 named destinations out of 1000 (max. 500000)
+ 30850 words of extra memory for PDF output out of 35830 (max. 10000000)
 
