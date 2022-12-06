@@ -181,7 +181,7 @@ generate <- function(n){
     x[i] <- NA
     while (is.na(x[i])) {
       y <- rmajor(1)
-      u <- runif(1,0, fpx_Tmin)
+      u <- runif(1,0, 1)
       accept <- u <= (fx1(y) / fmajor(y))
       if (accept) {
         x[i] <- y

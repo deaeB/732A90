@@ -1,0 +1,288 @@
+---
+title: "lab04"
+author: "Shipeng Liu, Dongwei Ni"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(coda)
+```
+
+## Task 1:Metropolis–Hastings Sampler
+
+```{r 1.1}
+mcq1 <- function(X0_ele, n, sdlog_in){
+  
+  X0 <- rep(X0_ele, n)
+  pdf_pi <- \(x) if (x > 0) {
+    (x^5 * exp(-x) / 120)
+    } else {NA}
+  
+  for (i in 1:(n-1)) {
+    X <- X0[i]
+    Y <- rlnorm(1, meanlog = log(X), sdlog = sdlog_in)
+    U <- runif(1)
+    alpha <- min(1, pdf_pi(Y)*dlnorm(X, meanlog = log(Y), sdlog = sdlog_in) /
+                   (pdf_pi(X)*dlnorm(Y, meanlog = log(X), sdlog = sdlog_in)))
+    if (U < alpha) {
+      X0[i+1] <- Y
+    } else{
+      X0[i+1] <- X0[i]
+    }
+  }
+  return(X0)
+}
+
+X1 <- mcq1(30, 8000, 0.5)
+plot(1:length(X1), X1, type = "l", xlab = "t", ylab = "X(t)")
+abline(h = 12)
+```
+
+- As we can see the plot converges with only few points out of (0,12) after burn-in period. And from the plot it shows that the burn-in period can be very small because it converges rapidly.
+
+## Task 2:Sampling by chi–square distribution
+
+```{r 1.2}
+mcq2 <- function(X0_ele, n){
+  
+  X0 <- rep(X0_ele, n)
+  pdf_pi <- \(x) if (x > 0) {
+    (x^5 * exp(-x) / 120)
+    } else {NA}
+  
+  for (i in 1:(n-1)) {
+    X <- X0[i]
+    Y <- rchisq(1, df = (X) )
+    U <- runif(1)
+    alpha <- min(1, pdf_pi(Y)*dchisq(X, df = floor(Y+1)) /
+                   (pdf_pi(X)*dchisq(Y, df =floor(X+1))))
+    if (U < alpha) {
+      X0[i+1] <- Y
+    } else{
+      X0[i+1] <- X0[i]
+    }
+  }
+  return(X0)
+}
+
+X2 <- mcq2(30, 8000 )
+plot(1:length(X2), X2, type = "l", xlab = "t", ylab = "X(t)")
+abline(h = 12)
+```
+
+## Task 3:Compare the result of Step 1 and 2 and make conclusion
+
+- From the plot we can see that both log-normal and chi-square converges. Seems there is no obvious differences between two methods. Both methods seems can be chose equivalently to use.
+
+
+## Task 4:Gelman–Rubin method to analyze convergence
+
+```{r 1.4}
+f1=mcmc.list()
+
+for(i in 1:10){
+  f1[[i]]=as.mcmc(mcq2(i, 8000 ))
+}
+print(gelman.diag(f1))
+```
+
+- The Gelman–Rubin factor is around 1,which means the chain has converged.
+
+## Task 5:Estimate Integral
+
+We want to estimate integral$\int^\infty_0xf(x)dx$
+
+where $\int^\infty_0f(x)dx=1$
+
+Then,if $X\sim f(x)$:
+
+$$\int^\infty_0xf(x)dx=E[X]$$
+Estimate:
+$$\overline E[X]=\frac 1n \sum^n_{i=1}x_i,\forall_ix_i \sim f(·)$$
+
+So,using the sampling in step 1,we get:
+```{r 1.5.1}
+mean(X1)
+```
+
+Using the sampling in step 2,we get:
+```{r 1.5.2}
+mean(X2)
+```
+
+## Task 6:Actual integral of gamma distribution
+
+From wikipedia:https://en.wikipedia.org/wiki/Gamma_distribution
+
+The expection of gamma distribution:
+$$E[X]=k\theta$$
+
+So,
+$$\int^\infty_0xf(x)dx=E[X]=k\theta=6$$
+where $k=6$ and $\theta=1$.
+
+Our estimate value is very close to the actual integral of gamma distribution.
+
+
+# Assignment 2:Gibbs Sampling
+
+## Task 1:The dependence of Y on X
+
+```{r 2.1.1}
+load("chemical.RData")
+chemical=data.frame("X"=X,"Y"=Y)
+ggplot(data=chemical,aes(x=X,y=Y))+geom_point()
+
+```
+
+From the point of view of the distribution of sample points, it is more reasonable to use the logarithmic model.
+
+
+## Task 2:Likelihood and Prior
+
+#### Likelihood $p(\vec Y|\vec \mu)$: 
+
+$$\begin{aligned}
+p(\vec Y|\vec \mu)&=\prod^n_{i=1}{\frac 1{\sigma\sqrt{2\pi}} e^{-\frac{(y_i-\mu_i)^2}{2\sigma^2}}} \\
+&=(\frac 1{\sigma\sqrt {2\pi}})^{n}e^{-\sum_{i=1}^n\frac{(y_i-\mu_i)^2}{2\sigma^2}}
+\end{aligned}$$
+where $\sigma^2=0.2$
+
+#### Prior$p(\vec\mu)$:
+
+$$\begin{aligned}
+p(\vec\mu)&=p(\mu_1)·p(\mu_2|\mu_1)·…·p(\mu_{n}|\mu_{n-1})  \\
+&=1·\prod^{n-1}_{i=1}{\frac 1{\sigma\sqrt{2\pi}} e^{-\frac{(\mu_{i+1}-\mu_i)^2}{2\sigma^2}}} \\
+&=(\frac 1{\sigma\sqrt {2\pi}})^{n-1}e^{-\sum_{i=1}^{n-1}\frac{(\mu_{i+1}-\mu_i)^2}{2\sigma^2}}
+\end{aligned}$$
+where $\sigma^2=0.2$
+
+
+## Task 3:Posterior,conditional marginal distribution
+Posterior$p(\vec\mu|\vec Y)$:
+
+$$\begin{aligned}
+p(\vec\mu|\vec{Y}) &\propto P(\vec{Y}|\vec{\mu})P(\vec{\mu}) \\
+&\propto exp\Bigg{[}-\sum_{i=1}^n\frac{(y_i-\mu_i)^2}{2\sigma^2}\Bigg{]}exp\Bigg{[}-\sum_{i=1}^{n-1}\frac{(\mu_{i+1}-\mu_i)^2}{2\sigma^2}\Bigg{]} \\
+&\propto exp \Bigg{[} -\frac{1}{2\sigma^2} \bigg{(} \sum^{n-1}_{i=1} \big{[} (\mu_i - \mu_{i+1})^2 + (\mu_i -  y_i)^2 \big{]} + (\mu_n - y_n)^2 \big{)} \Bigg{]}
+\end{aligned}$$
+
+Consider $p(\mu_1|\vec {\mu_{-1}},\vec Y)$:
+
+$$p(\mu_1|\vec {\mu_{-1}},\vec Y)\propto exp\Bigg{[}-\frac 1{2\sigma^2}\bigg{(}(\mu_1-\mu_2)^2+(\mu_1-y_1)^2\bigg{)}\Bigg{]}$$ 
+From Hint B we get:
+$$p(\mu_1|\vec {\mu_{-1}},\vec Y)\propto exp\Bigg{[}-\frac 1{\sigma^2}\bigg{(}\mu_1-\frac {(\mu_2+y_1)}2\bigg{)}^2\Bigg{]} \sim N\bigg{(}\frac {\mu_2+y_1}2,\frac{\sigma^2}2 \bigg{)}$$
+
+Consider $p(\mu_n|\vec {\mu_{-n}},\vec Y)$:
+
+$$
+p(\mu_n|\vec {\mu_{-n}},\vec Y)\propto exp\Bigg{[}-\frac 1{2\sigma^2}\bigg{(}(\mu_{n-1}-\mu_n)^2+(\mu_n-y_n)^2\bigg{)}\Bigg{]}
+$$
+
+From Hint B we get:
+$$p(\mu_n|\vec {\mu_{-n}},\vec Y)\propto exp\Bigg{[}-\frac 1{\sigma^2}\bigg{(}\mu_n-\frac {(\mu_{n-1}+y_n)}2\bigg{)}^2\Bigg{]} \sim N\bigg{(}\frac {\mu_{n-1}+y_n}2,\frac{\sigma^2}2 \bigg{)}$$
+
+Finally we consider $p(\mu_i|\vec {\mu_{-i}},\vec Y)$:
+
+$$
+p(\mu_i|\vec {\mu_{-i}},\vec Y)\propto exp\Bigg{[}-\frac 1{2\sigma^2}\bigg{(}(\mu_{i-1}-\mu_i)^2+(\mu_{i}-\mu_{i+1})^2+(\mu_i-y_i)^2\bigg{)}\Bigg{]}
+$$
+
+
+From Hint C we get:
+$$
+\begin{aligned}
+p(\mu_i|\vec {\mu_{-i}},\vec Y)&\propto exp\Bigg{[}-\frac 1{2\sigma^2}\bigg{(}(\mu_{i}-\mu_{i-1})^2+(\mu_{i}-\mu_{i+1})^2+(\mu_i-y_i)^2\bigg{)}\Bigg{]} \\
+&\propto exp\Bigg{[}-\frac{2\sigma^2}3 \bigg{(} \mu_i-\frac {(\mu_{i-1}+\mu_{i+1}+y_i)}3\bigg{)}^2\Bigg{]}\sim N\bigg{(}\frac {\mu_{i-1}+\mu_{i+1}+y_i}3,\frac{\sigma^2}3 \bigg{)}
+\end{aligned}
+$$
+
+
+## Task 4:Implement a Gibbs sampler
+```{r 2.4.1}
+Gibbs=function(data,t_max){
+  n=nrow(data)  #
+  record=matrix(0,nrow=t_max,ncol = n)
+  t=1
+  while(t<=t_max){
+    for(i in 1:n){
+      if(i==1){
+        record[t,i]=rnorm(1,(record[t,2]+data[1,2])/2,sqrt(0.2/2))
+      }else if(i>1 && i<n){
+        record[t,i]=rnorm(1,(record[t,i-1]+
+                               record[t,i+1]+data[i,2])/3,sqrt(0.2/3))
+      }else if(i==n){
+        record[t,i]=rnorm(1,(record[t,n-1]+data[n,2])/2,sqrt(0.2/2))
+      }
+    }
+    if(t<t_max){
+      record[t+1,]=record[t,]
+    }
+    t=t+1
+  }
+  return(record)
+}
+
+samp=Gibbs(chemical,1000)
+
+```
+
+#### The expected value of µ by Monte Carlo approach
+.  
+  
+The expected µ value:
+```{r 2.4.2,echo=FALSE}
+expect_mu=colMeans(samp)
+expect_mu
+```
+
+#### Plot the expected value of µ versus X and Y versus X in the same graph
+.  
+  
+  
+```{r 2.4.3,echo=FALSE}
+chemical=chemical%>%mutate(mu=expect_mu)%>%group_by(X)%>%
+  pivot_longer(Y:mu,names_to="slmp",values_to="ss")
+ggplot(data=chemical,aes(x=X,y=ss))+geom_point(aes(color=slmp))+
+  labs(x = "X", y = "Value",
+       color = "Value") +
+  scale_color_discrete(
+    name = "Values:", 
+    labels = c("Expected µ", "Y")
+  )
+```
+
+It seems some of the noise have been removed,and the expected value of µ can catch the true underlying dependence between Y and X.
+
+
+## Task 5:Converge
+
+
+  
+```{r 2.5.1, echo=FALSE}
+samp_df=data.frame(samp)%>%mutate(sample=1:1000)
+ggplot(samp_df,aes(x=sample,y=X50))+geom_line()
+
+```
+
+#### Trace plot for $\mu_n$
+.  
+
+From the first sampling to the last time, $\mu_n$ always oscillates in a range, which means that this Markov chain reaches a stable condition and convergence at the beginning, and it has no Burn-in period
+
+
+
+
+
+
+
+
+
+

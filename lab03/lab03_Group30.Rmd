@@ -98,13 +98,14 @@ sampling=function(samp_x,constant,c,t_min,alpha){
     x=NA
     while(is.na(x)){
       u=runif(1)
-      if(samp_x>=0 && samp_x<=t_min+0.5){
-        y=runif(1)
-        if(u<=f(y)/constant*dunif(y)){x<-y}
+      if(samp_x>=0 && samp_x<=t_min){
+        y=runif(1,0,t_min)
+        if(u<=f(y)/constant*dunif(y,0,t_min)){x<-y}
       }else{
-        y=rplcon(1,t_min,alpha)
-        if(u<=f(y)/constant*dplcon(y,t_min,alpha)){x<-y}
+        y=rplcon(1,t_min,alpha)    
+        if(u<=f(y)/constant*dplcon(y,t_min,alpha)){x<-y} 
       }
+      #else{break}
     }
     return(x)
   })
@@ -113,10 +114,10 @@ sampling=function(samp_x,constant,c,t_min,alpha){
 
 t_min=4/3
 alpha=1.5
-c=2
-constant=1
+c=1
+constant=2
 
-samp_x=runif(2000,0,10)
+samp_x=c(runif(floor(2000*5/33),0,t_min),runif(floor(2000*28/33),t_min,10))
 samp=sampling(samp_x,constant,c,t_min,alpha)
 p2=ggplot(data.frame("x"=samp),aes(x=x))+geom_density()+xlim(c(0,10))+
   labs(title="The sampler density",tag="Fig. 2")
@@ -124,7 +125,6 @@ df_f=df%>%filter(class=="f")
 p3=ggplot(data=df_f,aes(x=x,y=y))+geom_line()+
   labs(title="The target density",tag="Fig. 3")
 plot_comb=grid.arrange(p2,p3)
-plot_comb
 ```
 
 
