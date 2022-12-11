@@ -118,31 +118,71 @@ ggplot(data = physical1, aes(X,Y,Z))+
 
 - Seems that Y and Z may possibly highly related to each other and sharing a same distribution depends on X. The response in general falls when X grows but always positive and seems converge to 0.
 
+## 2.2
 
-```{r 2.2X}
-llik <- \(x,lambda) -1*sum(x/lambda)
-# x is a vector
+- See codes below  
 
-funEM <- function(Y, lambda0, minDelta, kmax){
-  Yobs <- Y[!is.na(Y)]
-  Ymiss <- Y[is.na(Y)]
-  n <- length(c(Yobs, Ymiss))
-  r <- length(Yobs)
+```{r 2.2}
+FlambdaNew <- function(n, X, Y, Xz, Zobs, r, lambdak){
+  1/(2*n)*(sum(X*Y) + 0.5*(sum(Xz*Zobs)) + (n-r)*lambdak)
+}
+
+funEM <- function(X, Y, Z, lambda0, minDelta, kmax){
+  Zobs <- Z[!is.na(Z)]
+  Zmiss <- Z[is.na(Z)]
+  Xz <- X[which(!is.na(Z))]
+  n <- length(c(Zobs, Zmiss))
+  r <- length(Zobs)
   
   k <- 1
-  llvalprev<-floglik(Yobs,lambda0)
-  llvalcurr<-llvalprev+100*minDelta
-  print(c(lambda0, llvalcurr))
+  lambdaPrev<-lambda0
+  lambdaCurr<-lambdaPrev+100*minDelta
+  print(c(lambda0, lambdaCurr))
   
-  while ((abs(llvalprev-llvalcurr)>minDelta) && (k<(kmax+1))){
-    llvalprev<-llvalcurr
-    ## E-step
+  while ((abs(lambdaCurr-lambdaPrev)>minDelta) && (k<(kmax+1))){
+    lambdaPrev<-lambdaCurr
     
+    lambdaCurr <- FlambdaNew(n, X, Y, Xz, Zobs, r, lambdaPrev)
+    
+    
+    k <- k+1
+    cat("lambdaCurr:",lambdaCurr," ")
+    cat("lambdaPrev:",lambdaPrev," ")
+    cat("iteration:",k-1,"\n")
   }
 }
-```
-
-```{r}
 
 ```
+## 2.3
 
+```{r 2.3}
+
+X <- physical1$X
+Y <- physical1$Y
+Z <- physical1$Z
+
+funEM(X,Y,Z,100 , 0.001, 100)
+```
+
+- The optimal value would be 10.69566, and it takes 5 iterations to reach it.
+
+## 2.4
+
+- Take 10.69566 as $\lambda$
+
+```{r 2.4, warning=FALSE}
+optLambda <- 10.69566
+
+EY <- optLambda / X
+EZ <- 2*optLambda / (X)
+
+ggplot(data = physical1)+
+  geom_point(aes(x = X, y = Y, color = "Y"))+
+  geom_point(aes(x = X, y = Z, color = "Z"))+
+  geom_line(aes(x = X, y = EY, color = "Y"))+
+  geom_line(aes(x = X, y = EZ, color = "Z"))+
+  ylab("Y & Z")
+
+```
+
+- The $\lambda$ we computed seems reasonable. Y value is generally lower than Z for the same X, as well as the expectation line we draw.
