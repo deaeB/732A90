@@ -1,0 +1,193 @@
+---
+title: "lab05"
+author: "Shipeng Liu,Dongwei Ni"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(boot)
+```
+
+
+# Question 1: Hypothesis testing
+
+```{r}
+set.seed(12345)
+lottery=read.csv("lottery.csv",header =TRUE,sep =";")
+```
+
+## Task 1:Make a scatter plot
+```{r}
+ggplot(data=lottery)+geom_point(aes(x=Day_of_year,y=Draft_No))
+```
+
+The lottery looks random,X and Y seems independent.
+
+
+## Task 2:Plot a loess smoother curve
+```{r}
+fit=loess(lottery$Draft_No~lottery$Day_of_year,data=lottery)
+Y_predict=predict(fit,data=lottery)
+lottery1=lottery%>%mutate(predict_Y=Y_predict)
+ggplot(data=lottery1)+geom_point(aes(x=Day_of_year,y=Draft_No))+
+  geom_line(aes(x=Day_of_year,y=predict_Y),color="blue")
+
+```
+
+We use loess smoother to fit a curve and plot it in the previous graph,now it seems there are slight correlation between X and Y.In the first half year,more Draft No may be larger,but in the second half,more Draft No may be smaller.
+
+
+## Task 3:Estimate the distribution of T using non–parametric bootstrap
+
+```{r}
+stat=function(data,vn){
+  data=as.data.frame(data[vn,])
+  fit_bootstarp=loess(Draft_No~Day_of_year,data=data)
+  y_predict_bs=predict(fit_bootstarp,data=data)
+  
+  y_predict_max=max(y_predict_bs)
+  y_predict_min=min(y_predict_bs)
+  
+  x_max=data$Day_of_year[which.max(y_predict_bs)]
+  x_min=data$Day_of_year[which.min(y_predict_bs)]
+  
+  t=((y_predict_max-y_predict_min)/(x_max-x_min))
+  return(t)
+}
+
+res=boot(lottery,stat,R=2000)
+boot.ci(res)
+plot(res)
+```
+
+
+The distribution of T-value is around -0.35,which is smaller than 0,so the lottery is random.
+
+```{r}
+p_value=mean(res$t>=0)
+p_value
+```
+P-value of the test is around 0.0015,We believe there is a 99.85% chance that the lottery is random.
+
+
+## Task 4:implement permutation test
+
+```{r}
+B=2000
+permu_test=function(data,B){
+  Ms=stat(data,1:nrow(data))
+  sta=numeric(B)
+  n=dim(data)[1]
+  for(b in 1:B){
+    GB=sample(data$Day_of_year,n)
+    data=data%>%mutate(Day_of_year=GB)
+    sta[b]=stat(data,1:n)
+  } 
+  #Ms=stat(lottery,1:nrow(lottery))
+  #calculate p value
+  p_value_permut=mean(sta>=Ms)
+  return(p_value_permut)
+}
+
+res_permu=permu_test(lottery,B)
+res_permu
+
+```
+
+The p-value is around 0.925,so We can't reject H0,that lottery is random.
+
+
+## Task 5:
+
+### a) Generate (an obviously non–random) dataset
+
+```{r}
+new_dataset=as.data.frame(lottery$Day_of_year)
+colnames(new_dataset)=c("Day_of_year")
+new_dataset=new_dataset%>%
+  mutate(Draft_No=NA)
+for(i in 1:nrow(new_dataset)){
+  new_dataset$Draft_No[i]=max(0,min(0.1*new_dataset$Day_of_year[i]+rnorm(1,183,sd=10),366))
+}
+
+ggplot(data=new_dataset)+geom_point(aes(x=Day_of_year,y=Draft_No))
+```
+
+### b) Plug these data into the permutation test with B = 200 and note whether it was rejected.
+
+```{r}
+res_permu=permu_test(new_dataset,200)
+res_permu
+```
+
+The p-value is only 0.005,so H0:Data is random is rejected
+
+### c) Repeat
+
+```{r}
+repeat_power=function(alpha){
+  new_dataset=as.data.frame(lottery$Day_of_year)
+  colnames(new_dataset)=c("Day_of_year")
+  new_dataset=new_dataset%>%
+    mutate(Draft_No=NA)
+  for(i in 1:nrow(new_dataset)){
+    new_dataset$Draft_No[i]=max(0,min(alpha*new_dataset$Day_of_year[i]+rnorm(1,183,sd=10),366))
+  }
+  
+  res_permu=permu_test(new_dataset,200)
+  return(res_permu)
+}
+
+power_data=sapply(seq(0.1,10,0.1),FUN=repeat_power)
+res_power=data.frame("value"=power_data,"alpha"=seq(0.1,10,0.1))
+
+ggplot(data=res_power)+geom_point(aes(x=alpha,y=value))
+```
+
+For all possible values of alpha, power is 1.The p-value all remain 0,which seems unreasonable.Excluded all possible errors, I still don't know what went wrong.
+
+
+# Assignment 2:Bootstrap, jackknife and conﬁdence intervals
+
+```{r}
+price=read.csv("prices1.csv",header =TRUE,sep =";")
+```
+
+## Task 1:Histogram and mean price
+```{r}
+ggplot(data=price)+geom_histogram(aes(x=Price),bins = 30)
+cat("The mean price is :",mean(price$Price))
+```
+
+#### Does it remind any conventional distribution?
+
+The distribution looks likes gamma distribution.
+
+
+## Task 2:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

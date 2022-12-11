@@ -1,0 +1,214 @@
+---
+title: "Lab06"
+author: "Shipeng Liu,Dongwei Ni"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+```
+
+# Assignment 1: Genetic Algorithm
+
+## Task 1
+```{r}
+fx=function(x){
+  ((x^2)/exp(x))-2*exp(-(9*sin(x))/(x^2+x+1))
+}
+
+```
+
+
+## Task 2:Deﬁne the function crossover()
+```{r}
+crossover=function(x,y){
+  return((x+y)/2)
+}
+
+```
+
+
+## Task 3:Deﬁne the function mutate()
+```{r}
+mutate=function(x){
+  return((x^2)%%30)
+}
+```
+
+
+## Task 4:
+
+```{r}
+genetic=function(maxiter,mutprob){
+  X_init=seq(0,30,5)
+  X=X_init
+  values=sapply(X,FUN=fx)
+  for(i in 1:maxiter){
+    parents=sample(X,2)
+    victim=order(values)[1]
+    kid=crossover(parents[1],parents[2])
+    prob=runif(1,0,1)
+    if(prob<mutprob){
+      kid=mutate(kid)
+    }
+    X[victim]=kid
+    values=sapply(X,FUN=fx)
+  }
+  
+  
+  #plot
+  plot_dataframe=data.frame("x"=seq(0,30,0.001),
+                            "fx"=sapply(seq(0,30,0.001),FUN=fx),
+                            "class"="function_plot")
+  plot_dataframe=rbind(plot_dataframe,data.frame("x"=X,
+                                                 "fx"=sapply(X,FUN=fx),
+                                                 "class"="observation"))
+  p=ggplot(data=plot_dataframe)+geom_point(aes(x=x,y=fx,color=class))
+  plot(p)
+  
+  return(X)
+}
+
+```
+
+## Task 5: Run the code with diﬀerent combinations of maxiter= 10, 100 and mutprob= 0.1, 0.5, 0.9.
+
+### maxiter=10,mutprob=0.1
+```{r}
+X_observe=genetic(10,0.1)
+cat("The final observations is:",X_observe)
+```
+
+### maxiter=10,mutprob=0.5
+```{r}
+X_observe=genetic(10,0.5)
+cat("The final observations is:",X_observe)
+```
+
+### maxiter=10,mutprob=0.9
+```{r}
+X_observe=genetic(10,0.9)
+cat("The final observations is:",X_observe)
+```
+
+### maxiter=100,mutprob=0.1
+```{r}
+X_observe=genetic(100,0.1)
+cat("The final observations is:",X_observe)
+```
+
+### maxiter=100,mutprob=0.5
+```{r}
+X_observe=genetic(100,0.5)
+cat("The final observations is:",X_observe)
+```
+
+### maxiter=100,mutprob=0.9
+```{r}
+X_observe=genetic(100,0.9)
+cat("The final observations is:",X_observe)
+```
+
+
+### Conclusion:
+
+Among this case,we could find that when maxiter is larger,and mutprob is smaller,the optimizer will perform better.The best optimizer in these cases is the conbination where maxiter=100,mutprob=0.1.
+
+
+# Assignment 2: EM algorithm
+
+## Task 1:Make a time series plot
+```{r}
+physical=read.csv("physical1.csv")
+
+ggplot(physical)+geom_line(aes(x=X,y=Y),color="blue")+
+  geom_line(aes(x=X,y=Z),color="red")+ylab("Values")
+```
+
+It seems that two processes are related to each other,the variance of both Y and Z decrease as the X increase.
+
+
+# Task 2:
+
+
+# Task 3:
+
+```{r}
+loglikelihood=function(lamb){
+  
+  
+}
+
+EM<-function(Y,eps){
+    lambd_init=100
+    lambd_curr=lambd_init
+    while (abs(lambd_prev-lambd_curr)<0.001){
+	lambd_prev<-lambd_curr
+	## E-step
+	EY<-sum(Yobs)+(n-r)*muk
+	EY2<-sum(Yobs^2)+(n-r)*(muk^2+sigma2k)
+
+	## M-step
+	muk<-EY/n
+	sigma2k<-EY2/n-muk^2
+
+	## Compute log-likelihood
+	llvalcurr<-floglik(Yobs,muk,sigma2k,r)
+	k<-k+1
+
+	print(c(muk,sigma2k,llvalcurr))
+    }
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
