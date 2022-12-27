@@ -126,6 +126,13 @@ myvar_new=function(x){
   return(sum_x/(length(x)-1))
 }
 myvar_new(x)
+
+Y <- numeric(length = 10000)
+for (i in 1:10000) {
+  Y[i] <- myvar_new(x[1:i]) - var(x[1:i])
+}
+
+plot(1:10000, Y)
 ```
 
 
