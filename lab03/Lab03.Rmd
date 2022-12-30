@@ -19,6 +19,8 @@ library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(poweRlaw)
+
+library(VGAM)
 ```
 
 # Question 1: Stable distribution
@@ -60,7 +62,8 @@ curve(fpx1, from = 0, to = fpx_Tmin , add = TRUE, col = "red")
 curve(fpx1, from = fpx_Tmin+ exp(-15) ,  add = TRUE, col = "red")
 text(x = 5, y  = c(0.6, 1), 
      # labels = c("f(x), c=1", "fp(x), Tmin=1, alpha=2"),
-     labels = c(paste0("f(x), c=", fx_c), paste0("fp(x), Tmin=",fpx_Tmin, " alpha=", fpx_alpha)),
+     labels = c(paste0("f(x), c=", fx_c), paste0("fp(x), Tmin=",fpx_Tmin,
+                                                 " alpha=", fpx_alpha)),
      col = c("black", "red")
      )
 
@@ -126,7 +129,8 @@ text(x = 5, y  = c(0.6, 1, 1.4),
      # labels = c("f(x), c=1", "fp(x), Tmin=1, alpha=2"),
      labels = c(paste0("f(x), c=", fx_c),
                 paste0("fu(x) = maxf(x) = ", round(fx1_max, 2),", x is in [0, Tmin]" ),
-                paste0("n*fp(x)", ", n=", fpx_n, ", Tmin=", round(fpx_Tmin,2), ", alpha=", fpx_alpha)),
+                paste0("n*fp(x)", ", n=", fpx_n, ", Tmin=", round(fpx_Tmin,2),
+                       ", alpha=", fpx_alpha)),
      col = c("black", "blue", "red")
      )
 
@@ -309,8 +313,8 @@ $$ f(x) = \frac{\alpha}{2}exp(-\alpha \mid x - \mu \mid) $$
 And we calculate the CDF:
 $$F(x) = \int_{-\infty}^{x}f(u)du = \left\{
 \begin{array}{c l}	
-    \frac{1}{2} \rm e^{(\frac{x - \mu}{\alpha})}  & \rm if \enspace  x < \mu\\
-     1-\frac{1}{2} \rm e^{(\frac{x - \mu}{\alpha})} & \rm if \enspace x \geq \mu
+    \frac{1}{2} \rm e^{{\alpha}({x - \mu})}  & \rm if \enspace  x < \mu\\
+     1-\frac{1}{2} \rm e^{{-\alpha}({x - \mu})} & \rm if \enspace x \geq \mu
 \end{array}\right.$$
 
 The inverse of CDF:
@@ -345,10 +349,14 @@ r_laplace=function(gen_num,mu,alpha){
 
 ### Generate 10000 random numbers from this distribution, plot the histogram and comment whether the result looks reasonable.
 ```{r 2.1.2}
-p4=ggplot(data=data.frame("y"=r_laplace(10000,0,1)),aes(x=y))+
+ggplot(data=data.frame("y"=r_laplace(10000,0,1)),aes(x=y))+
   geom_histogram(bins=50)+
   labs(title="Laplace distribution generate by Inverse CDP method")
-p4
+
+
+ggplot(data=data.frame("y"=r_laplace(10000,0,1)),aes(x=y))+
+  geom_function(fun = dlaplace)+
+  labs(title="Laplace distribution generate by dlaplace()")
 ```
 
 Compare to the plot of Laplace distribution probability density function(it can be thought of as two exponential distributions spliced together along the abscissa),the result seems resonable.
@@ -382,7 +390,7 @@ c mush be large enough,but too large c may cause large rejection rates,we need t
 $$\frac c2e^{-|x|} \geq \frac 1{\sqrt{2\pi}} e^{|x|-\frac {x^2}2}$$
 solve it and we'll get:
 $$c \geq \sqrt {\frac 2{\pi}}e^{(|x|-\frac {x^2}2)}$$
-when$x=1$,we get the maximum $c$:
+when$x=1$,we get the minimum $c$:
 $$c=\sqrt{\frac {2e}{\pi}}$$
 
 ### Generate 2000 random numbers N (0, 1) using your code and plot the histogram. 
