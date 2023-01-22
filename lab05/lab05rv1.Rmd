@@ -1,0 +1,293 @@
+---
+title: "lab05"
+author: "Shipeng Liu,Dongwei Ni"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(boot)
+```
+
+
+# Question 1: Hypothesis testing
+
+```{r}
+set.seed(12345)
+lottery=read.csv("lottery.csv",header =TRUE,sep =";")
+```
+
+## Task 1:Make a scatter plot
+```{r}
+ggplot(data=lottery)+geom_point(aes(x=Day_of_year,y=Draft_No))
+```
+
+The lottery looks random,X and Y seems independent.
+
+
+## Task 2:Plot a loess smoother curve
+```{r}
+fit=loess(lottery$Draft_No~lottery$Day_of_year,data=lottery)
+Y_predict=predict(fit,data=lottery)
+lottery1=lottery%>%mutate(predict_Y=Y_predict)
+ggplot(data=lottery1)+geom_point(aes(x=Day_of_year,y=Draft_No))+
+  geom_line(aes(x=Day_of_year,y=predict_Y),color="blue")
+
+```
+
+We use loess smoother to fit a curve and plot it in the previous graph,now it seems there are negative correlation between Day_of_year and Draft_No.
+
+
+## Task 3:Estimate the distribution of T using non–parametric bootstrap
+
+```{r}
+stat=function(data,vn){
+  data=as.data.frame(data[vn,])
+  fit_bootstarp=loess(Draft_No~Day_of_year,data=data)
+  y_predict_bs=predict(fit_bootstarp,data=data)
+  
+  y_predict_max=max(y_predict_bs)
+  y_predict_min=min(y_predict_bs)
+  
+  x_max=data$Day_of_year[which.max(y_predict_bs)]
+  x_min=data$Day_of_year[which.min(y_predict_bs)]
+  
+  t=((y_predict_max-y_predict_min)/(x_max-x_min))
+  return(t)
+}
+
+res=boot(lottery,stat,R=2000)
+boot.ci(res)
+plot(res)
+```
+
+
+t=0 is outside of a significant portion of distribution of T,so the lottery is not random.
+
+```{r}
+p_value=mean(res$t<=0)
+p_value
+```
+
+Value of p is 0.999,where $P(t<=0)=p$.
+
+
+## Task 4:implement permutation test
+
+```{r}
+B=2000
+permu_test=function(data,B){
+  Ms=stat(data,1:nrow(data))
+  sta=numeric(B)
+  n=dim(data)[1]
+  for(b in 1:B){
+    GB=sample(data$Day_of_year,n)
+    data=data%>%mutate(Day_of_year=GB)
+    sta[b]=stat(data,1:n)
+  } 
+  #Ms=stat(lottery,1:nrow(lottery))
+  #calculate p value
+  #test is two–sided
+  p_value_permut=mean(abs(sta)>=abs(Ms))
+  return(p_value_permut)
+}
+
+res_permu=permu_test(lottery,B)
+res_permu
+
+```
+
+The p-value is around 0.15,so We can't reject H0,that lottery is random.
+
+
+## Task 5:Study the power
+
+```{r}
+repeat_power=function(alpha){
+  new_dataset=as.data.frame(lottery$Day_of_year)
+  colnames(new_dataset)=c("Day_of_year")
+  new_dataset=new_dataset%>%
+    mutate(Draft_No=NA)
+  for(i in 1:nrow(new_dataset)){
+    new_dataset$Draft_No[i]=max(0,min(alpha*new_dataset$Day_of_year[i]+
+                                        rnorm(1,183,sd=10),366))
+  }
+  
+  res_permu=permu_test(new_dataset,200)
+  return(res_permu)
+}
+
+power_data=sapply(seq(0.01,1,0.01),FUN=repeat_power)
+power=1-(sum(power_data[power_data>0.05])/length(power_data))
+cat("The power is:",power)
+```
+
+In this case,
+
+H0:Lottery is random
+
+H1:Lottery is non–random
+
+When the alpha is 0.07,the p-value is 0.01,There is only 1% chance that the data distribution is random, so we reject the null hypothesis.
+
+Consider when $\alpha$ become larger,The distribution of data will gradually become like non-random.Finally we got the power=0.98505,hence the quality of the test statistics is good.
+
+# Assignment 2:Bootstrap, jackknife and conﬁdence intervals
+
+```{r}
+price=read.csv("prices1.csv",header =TRUE,sep =";")
+```
+
+## Task 1:Histogram and mean price
+```{r}
+ggplot(data=price)+geom_histogram(aes(x=Price),bins = 30)
+cat("The mean price is :",mean(price$Price))
+```
+
+#### Does it remind any conventional distribution?
+
+The distribution looks likes gamma distribution.
+
+
+## Task 2
+
+### Estimate the distribution of the mean price of the house using bootstrap
+
+```{r}
+stat_mean_price=function(data,vn){
+  data=data[vn,]
+  t=mean(data$Price)
+  return(t)
+}
+
+res=boot(price,stat_mean_price,R=2000)
+res
+plot(res)  
+```
+
+### Bootstrap bias–correction and the variance of the mean price
+
+Bias corrected estimator is:$T_1:=2T(D)-\frac 1B \sum^B_{i=1}T_i^*$
+
+```{r}
+cat("The variance of the mean price:",35.64^2,
+    "\nThe bias correction:",2*mean(price$Price)-mean(res$t))
+```
+
+### Compute a 95% conﬁdence interval 
+
+```{r warning=FALSE}
+boot.ci(res)
+```
+
+#### The 95% conﬁdence interval for the mean price using:
+
+bootstrap percentile:(1013,1152)
+
+bootstrap BCa:(1015,1157)
+
+ﬁrst–order normal approximation:(1012,1151)
+
+
+## Task 3:Estimate the variance of the mean price using the jackknife and compare it with the bootstrap estimate
+
+### Jackknife (n = B):
+
+$$\widehat {Var[T(·)]}=\frac 1{n(n-1)}\sum^n_{i=1}((T^*_i)-J(T))^2$$
+where
+$T^*_i=nT(D)-(n-1)T(D^*_i)$     $J(T)=\frac 1n\sum^n_{i=1}T^*_i$
+
+```{r}
+jackknife=function(data,B){
+  res=c()
+  for(i in 1:B){
+    res=c(res,mean(data$Price[-i]))
+  }
+  return(res)
+}
+
+res_jackknife=jackknife(price,nrow(price))
+n=nrow(price)
+Ti_star=n*mean(price$Price)-(n-1)*res_jackknife
+var_jackknife=sum(((Ti_star)-mean(Ti_star))^2)/(n*(n-1))
+cat("The variance of the mean price using the jackknife:",var_jackknife,
+    "\nThe variance of the mean price using the bootstrap:",35.64^2)
+```
+
+Compare to the bootstrap estimate,the variance of the mean price using the jackknife is larger,because Jackknife tend to overestimate variance.
+
+
+## Task 4:Compare the conﬁdence intervals obtained with respect to their length and the location of the estimated mean in these intervals
+
+```{r}
+a=mean(price$Price)-1.96*sqrt(var_jackknife)
+b=mean(price$Price)+1.96*sqrt(var_jackknife)
+cat("The confidence intervals (95%) of means of price using jackknife is:(",a,",",b,")")
+```
+
+```{r}
+ic_res=data.frame("confidence_intervals"=c("(1009,1153)","(1009,1151)",
+                                    "(1010,1152)","(1013,1158)"),
+           "length"=c(1153-1009,1151-1009,1152-1010,1158-1013),
+           "estimated_mean"=c(((1153+1009)/2),((1151+1009)/2),
+                              ((1152+1010)/2),((1158+1013)/2)))
+
+rownames(ic_res)=c("Normal","Basic","Percentile","BCa")
+ic_res
+```
+
+
+
+
+## Appendix
+
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
